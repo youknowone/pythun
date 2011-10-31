@@ -1,6 +1,4 @@
 
-from debug import D;
-
 QUOTE_CHARSET = '"' + "'";
 EOL_CHARSET = ['\n', '\r', '\0'];
 
@@ -74,6 +72,7 @@ class Tokenizer(object):
         self.text = text;
         self.build_token_types();
         self.reset();
+        self.infloop = False;
     #;
     def build_token_types(tokenizer):
         """Build token typeset""";
@@ -277,27 +276,36 @@ class Tokenizer(object):
         
         self.escaping = False;
         while True:
+            if not self.head():
+                raise Exception('TODO: Syntax Error Not End of String');
+            #;
             if self.head() == '\n':
                 tokens.append(self.take(self.BigStringToken.Body, 1));
                 self.pos.newline();
                 continue;
             #;
-            self.eat();
             if self.head() == '\\':
-                self.escaping = True;
+                self.escaping = not self.escaping;
+                self.eat();
                 continue;
             #;
             if self.head() == quote and not self.escaping:
                 if not self.head(0) == self.head(1) == self.head(2):
+                    self.eat();
                     continue;
                 #;
-                tokens.append(self.take(self.BigStringToken.Body));
+                token = self.take(self.BigStringToken.Body);
+                if token:
+                    tokens.append(token);
+                #;
                 tokens.append(self.take(self.BigStringToken.Foot, 3));
-                break;
+                print tokens
+                return self.BigStringToken(tokens);
             #;
+            self.eat();
             self.escaping = False;
         #;
-        return self.BigStringToken(tokens);
+        assert(False);
     #;
     def try_anyword(self):
         head = self.head();
