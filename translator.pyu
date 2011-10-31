@@ -104,7 +104,7 @@ class Translator(object):
         if self.need_newline:
             eol = self.t.EOLToken();
             eol.text = '\n';
-            yield eol
+            yield eol;
             self.need_newline = False;
         #;
         yield self.indent_token();
