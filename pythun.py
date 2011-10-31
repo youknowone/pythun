@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+"""Pythun(<- PYTHon UNindented) is indent-insensitive python-like language.
+
+This command output translated pythun code to python one.
+""";
+
+import sys;
+import getopt;
+
+import tokenizer;
+import translator;
+
+debug = False
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], 'hVd', ["help", "version", "debug"]);
+except getopt.error, msg:
+    print msg;
+    sys.exit(2);
+
+for o, a in opts:
+    if o in ("-h", "--help", "-V", "--version"):
+        print __doc__;
+        sys.exit(0);
+    if o in ("-d", "--debug"):
+        debug = True
+
+if len(args) == 0:
+    sys.stderr.write('Input an Pytion Unstricted file\n')
+    sys.exit(1)
+
+for arg in args:
+    if not arg.endswith('.pyu'):
+        sys.stderr.write('Only .pyu files are acceptable\n');
+        sys.exit(1);
+    text = open(arg, 'r').read();
+    if debug:
+        tokenizer = tokenizer.Debugger(text)
+        tokenizer.tokenize()
+    transer = translator.Translator(text)
+    print transer.translate()
+    

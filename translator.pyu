@@ -1,0 +1,175 @@
+
+import tokenizer
+from tokenizer import Tokenizer
+        
+class Translator(object):
+    def __init__(self, text):
+        self.text = text
+        self.t = Tokenizer(text)
+        self.tokens = self.t.tokenize()
+        self.pushbacks = []
+        self.inf_loop = False
+        self.block_depth = 0
+
+    def indent_token(self, depth=None):
+        if depth is None:
+            depth = self.block_depth
+        token = self.t.IndentToken()
+        token.text = ' ' * (4 * depth)
+        return token
+
+    def look_token(self):
+        token = self.pop_token()
+        self.push_token(token)
+        return token
+
+    def pop_token(self, acceptable=None):
+        if self.pushbacks:
+            res = self.pushbacks.pop()
+        else:
+            try:
+                res = self.tokens.next()
+            except StopIteration:
+                return self.t.EOFToken()
+        if acceptable is not None:
+            if acceptable != type(res) and acceptable != res.text:
+                raise Exception('Syntax Error')
+        return res
+
+    def push_token(self, token):
+        self.pushbacks.append(token)
+
+    def translate(self):
+        text = ''
+        for token in self.translate_file():
+            text += token.text
+        return text
+
+    def translate_file(self):
+        try:
+            while type(self.look_token()) != self.t.EOFToken:
+                for token in self.translate_line():
+                    yield token
+        except Exception as e:
+            print e
+
+    def translate_line(self):
+        if type(self.look_token()) == self.t.IndentToken:
+            self.pop_token()
+        
+    
+        if type(self.look_token()) == self.t.BlockEndianToken:
+            self.pop_token()
+            self.block_depth -= 1
+            #yield self.t.EOLToken();
+            return
+
+        tokens = []
+        while not type(self.look_token()) in [self.t.EOFToken, self.t.EOLToken]:
+            tokens.append(self.pop_token())
+        
+        noeffect = True
+        for token in tokens:
+            if type(token) in [self.t.EOFToken, self.t.EOLToken,
+                               self.t.CommentToken]:
+                continue
+            noeffect = False
+            break
+        
+        yield self.indent_token()
+        
+        if noeffect:
+            eol = self.t.EOLToken()
+            eol.text = '\n'
+            tokens.insert(0, eol)
+            tokens.append(self.pop_token())
+            for token in tokens:
+                yield token
+            return
+        
+        tokens.reverse()
+        for token in tokens:
+            self.push_token(token)
+
+        eol = self.t.EOLToken()
+        eol.text = '\n'
+        yield eol
+        if token.text in tokenizer.CONTROL_KEYWORDS:
+            depth = self.block_depth
+            if token.text in ['else', 'elif', 'except', 'finally']:
+                depth -= 1
+            yield self.indent_token(depth)
+            for t in self.translate_controlblock():
+                yield t
+            return
+        yield self.indent_token()
+        if token.text in ['from', 'import']:
+            for t in self.translate_import():
+                yield t
+            return
+        if token.text in tokenizer.DEFINITION_KEYWORDS:
+            for t in self.translate_definition():
+                yield t
+            return
+        if token.text == '@':
+            for t in self.translate_annotation():
+                yield t
+            return
+        for t in self.translate_to_endian():
+            yield t;
+    
+    def translate_import(self):
+        if self.look_token().text == 'from':
+            while not self.look_token().text == 'import':
+                yield self.pop_token()
+        if self.look_token().text == 'import':
+            for token in self.translate_to_endian():
+                yield token
+
+    def translate_to_endian(self, endian=None, accept_endian=False):
+        if endian is None:
+            endian = [self.t.SemicolonToken]
+        while not type(self.look_token()) in endian + [self.t.EOFToken]:
+            if type(self.look_token()) == self.t.EOLToken:
+                token = self.t.BackslashToken()
+                token.text = '\\'
+                yield token
+                yield self.pop_token()
+                if type(self.look_token()) == self.t.IndentToken:
+                    self.pop_token()
+                yield self.indent_token(self.block_depth + 1)
+                continue
+            yield self.pop_token()
+        endian_token = self.pop_token()
+        if type(endian_token) == self.t.EOLToken:
+            return
+        if accept_endian:
+            yield endian_token
+
+        if type(self.look_token()) == self.t.WhitespaceToken:
+            yield self.pop_token()
+        if type(self.look_token()) == self.t.CommentToken:
+            yield self.pop_token()
+        if type(self.look_token()) == self.t.EOLToken:
+            self.pop_token()
+
+    def translate_definition(self):
+        if not self.look_token().text in tokenizer.DEFINITION_KEYWORDS:
+            raise Exception('wrong call' + str(self.look_token()))
+        self.block_depth += 1
+        for token in self.translate_to_endian([self.t.ColonToken], True):
+            yield token
+    
+    def translate_controlblock(self):
+        if not self.look_token().text in tokenizer.CONTROL_KEYWORDS:
+            raise Exception('wrong call' + str(self.look_token()))
+        if not self.look_token().text in ['elif', 'else', 'except', 'finally']:
+            self.block_depth += 1
+        for token in self.translate_to_endian([self.t.ColonToken], True):
+            yield token
+
+    def translate_annotation(self):
+        if self.look_token().text != '@':
+            raise Exception('wrong call' + str(self.look_token()))
+        for token in self.translate_to_endian([self.t.SemicolonToken, self.t.EOLToken]):
+            yield token
