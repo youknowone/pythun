@@ -132,257 +132,257 @@ class Tokenizer(object):
         
         class BigStringToken(Token):
             __name__ = 'bigstring'
-            class Head(Token):                     __name__ = 'bigstringhead'                 
-            class Body(Token):                     __name__ = 'bigstringbody'                 
-            class Foot(Token):                     __name__ = 'bigstringfoot'                 
+            class Head(Token): __name__ = 'bigstringhead'                 
+            class Body(Token): __name__ = 'bigstringbody'                 
+            class Foot(Token): __name__ = 'bigstringfoot'                 
+            
             def __init__(self, tokens):
                 self.tokens = tokens
                 self.pos = tokens[0].pos
                 self.cur = tokens[0].cur.copy()
                 self.cur.length = tokens[-1].cur.end - self.cur.offset
-                @property
-                def text(self):
-                    if hasattr(self, '_text'):
-                        return self._text
-                    
-                    self._text = ''
-                    for token in self.tokens:
-                        self._text += token.text
-                    
+            @property
+            def text(self):
+                if hasattr(self, '_text'):
                     return self._text
                 
+                self._text = ''
+                for token in self.tokens:
+                    self._text += token.text
+                
+                return self._text
+        tokenizer.BigStringToken = BigStringToken
             
-            tokenizer.BigStringToken = BigStringToken
-            
-            class AtMarkToken(Token):                     __name__ = 'annotation'                 
-            tokenizer.AtMarkToken = AtMarkToken
-            
-            class BracketToken(Token):                     __name__ = 'bracket'                 
-            tokenizer.BracketToken = BracketToken
-            
-            class RoundBracketToken(Token):                     __name__ = 'roundbracket'                 
-            tokenizer.RoundBracketToken = RoundBracketToken
-            
-            class SquareBracketToken(BracketToken):                     __name__ = 'squarebracket'                 
-            tokenizer.SquareBracketToken = SquareBracketToken
-            
-            class CurlyBracketToken(Token):                     __name__ = 'curlybracket'                 
-            tokenizer.CurlyBracketToken = CurlyBracketToken
-            
-            class ColonToken(Token):                     __name__ = 'colontoken'                 
-            tokenizer.ColonToken = ColonToken
-            
-            class SemicolonToken(Token):                     __name__ = 'semicolon'                 
-            tokenizer.SemicolonToken = SemicolonToken
-            
-            class BackslashToken(Token):                     __name__ = 'backslash'                 
-            tokenizer.BackslashToken = BackslashToken
-            
-            class CommentToken(Token):                     __name__ = 'comment'                 
-            tokenizer.CommentToken = CommentToken
-            
-            class BlockEndianToken(Token):                     __name__ = 'blockendian'                 
-            tokenizer.BlockEndianToken = BlockEndianToken
-            
-            class EOLToken(Token):
-                __name__ = 'eol'
-                __eostatement__ = True
-            
-            tokenizer.EOLToken = EOLToken
-            
-            class EOFToken(Token):
-                __name__ = 'eof'
-                __eostatement__ = True
-            
-            tokenizer.EOFToken = EOFToken
+        class AtMarkToken(Token): __name__ = 'annotation'                 
+        tokenizer.AtMarkToken = AtMarkToken
         
-        def reset(self):
-            self.pos = Position(1, 1)
-            self.cur = Cursor(0)
+        class BracketToken(Token):  __name__ = 'bracket'                 
+        tokenizer.BracketToken = BracketToken
         
-        def eat(self, length=1):
-            self.cur.length += length
+        class RoundBracketToken(Token): __name__ = 'roundbracket' 
+        tokenizer.RoundBracketToken = RoundBracketToken
         
-        def back(self, length=None):
-            if length is None:                     length = self.cur.length                 
-            self.pos.col -= length
-            self.cur.length -= length
+        class SquareBracketToken(BracketToken): __name__ = 'squarebracket'
+        tokenizer.SquareBracketToken = SquareBracketToken;
         
-        def take(self, tokentype, length=0):
-            self.eat(length)
-            if self.cur.length == 0:                     return                 
+        class CurlyBracketToken(Token): __name__ = 'curlybracket' 
+        tokenizer.CurlyBracketToken = CurlyBracketToken
+        
+        class ColonToken(Token): __name__ = 'colontoken' 
+        tokenizer.ColonToken = ColonToken
+        
+        class SemicolonToken(Token): __name__ = 'semicolon'                 
+        tokenizer.SemicolonToken = SemicolonToken
+        
+        class BackslashToken(Token): __name__ = 'backslash' 
+        tokenizer.BackslashToken = BackslashToken
+        
+        class CommentToken(Token): __name__ = 'comment' 
+        tokenizer.CommentToken = CommentToken
+        
+        class BlockEndianToken(Token): __name__ = 'blockendian' 
+        tokenizer.BlockEndianToken = BlockEndianToken
+        
+        class EOLToken(Token):
+            __name__ = 'eol';
+            __eostatement__ = True;
+        #;
+        tokenizer.EOLToken = EOLToken
+        
+        class EOFToken(Token):
+            __name__ = 'eof'
+            __eostatement__ = True
+        #;
+        tokenizer.EOFToken = EOFToken
+        
+    def reset(self):
+        self.pos = Position(1, 1)
+        self.cur = Cursor(0)
+    
+    def eat(self, length=1):
+        self.cur.length += length
+    
+    def back(self, length=None):
+        if length is None:                     length = self.cur.length                 
+        self.pos.col -= length
+        self.cur.length -= length
+        
+    def take(self, tokentype, length=0):
+        self.eat(length)
+        if self.cur.length == 0:                     return                 
+        
+        token = tokentype()
+        self.pos.col += self.cur.length
+        self.cur.offset += self.cur.length
+        self.cur.length = 0
+        self.infloop = False
+        return token
+    
+    def try_indent(self):
+        while self.head() in [' ', '\t']:
+            self.eat()
+        
+        return self.take(self.IndentToken)
+    
+    def try_whitespace(self):
+        while self.head() in [' ', '\t']:
+            self.eat()
+        #;
+        return self.take(self.WhitespaceToken)
+    
+    def try_string(self):
+        head = self.head()
+        if head in ['ru']:
+            self.eat()
+        
+        quote = head
+        if not quote in QUOTE_CHARSET:
+            raise Exception('TODO: Not Quote Character')
+        
+        
+        self.escaping = False
+        while True:
+            self.eat()
+            if self.head() == '\\':
+                self.escaping = not self.escaping
+                continue
             
-            token = tokentype()
-            self.pos.col += self.cur.length
-            self.cur.offset += self.cur.length
-            self.cur.length = 0
-            self.infloop = False
-            return token
-        
-        def try_indent(self):
-            while self.head() in [' ', '\t']:
+            if self.head() == quote and not self.escaping:
                 self.eat()
-            
-            return self.take(self.IndentToken)
-        
-        def try_whitespace(self):
-            while self.head() in [' ', '\t']:
-                self.eat()
-            
-            return self.take(self.WhitespaceToken)
-        
-        def try_string(self):
-            head = self.head()
-            if head in ['ru']:
-                self.eat()
-            
-            quote = head
-            if not quote in QUOTE_CHARSET:
-                raise Exception('TODO: Not Quote Character')
-            
+                break
             
             self.escaping = False
-            while True:
-                self.eat()
-                if self.head() == '\\':
-                    self.escaping = not self.escaping
+            if self.head() == '\n':
+                raise Exception('TODO: Syntax Error EOL')
+            
+        
+        if self.selected[-2] == self.selected[-1] == self.head():
+            self.eat(-2)
+            return self.try_bigstring()
+        
+        return self.take(self.StringToken)
+        
+    def try_bigstring(self):
+        quote = self.head()
+        if not quote in QUOTE_CHARSET:
+            raise Exception('TODO: Not Quote Character')
+        
+        if not self.head(0) == self.head(1) == self.head(2):
+            raise Exception('TODO: Syntax Error Not Bigstring')
+        
+        tokens = [self.take(self.BigStringToken.Head, 3)]
+        
+        self.escaping = False
+        while True:
+            if self.head() == '\n':
+                tokens.append(self.take(self.BigStringToken.Body, 1))
+                self.pos.newline()
+                continue
+            
+            self.eat()
+            if self.head() == '\\':
+                self.escaping = True
+                continue
+            
+            if self.head() == quote and not self.escaping:
+                if not self.head(0) == self.head(1) == self.head(2):
                     continue
                 
-                if self.head() == quote and not self.escaping:
-                    self.eat()
-                    break
-                
-                self.escaping = False
-                if self.head() == '\n':
-                    raise Exception('TODO: Syntax Error EOL')
-                
-            
-            if self.selected[-2] == self.selected[-1] == self.head():
-                self.eat(-2)
-                return self.try_bigstring()
-            
-            return self.take(self.StringToken)
-        
-        def try_bigstring(self):
-            quote = self.head()
-            if not quote in QUOTE_CHARSET:
-                raise Exception('TODO: Not Quote Character')
-            
-            if not self.head(0) == self.head(1) == self.head(2):
-                raise Exception('TODO: Syntax Error Not Bigstring')
-            
-            tokens = [self.take(self.BigStringToken.Head, 3)]
+                tokens.append(self.take(self.BigStringToken.Body))
+                tokens.append(self.take(self.BigStringToken.Foot, 3))
+                break
             
             self.escaping = False
-            while True:
-                if self.head() == '\n':
-                    tokens.append(self.take(self.BigStringToken.Body, 1))
-                    self.pos.newline()
-                    continue
-                
-                self.eat()
-                if self.head() == '\\':
-                    self.escaping = True
-                    continue
-                
-                if self.head() == quote and not self.escaping:
-                    if not self.head(0) == self.head(1) == self.head(2):
-                        continue
-                    
-                    tokens.append(self.take(self.BigStringToken.Body))
-                    tokens.append(self.take(self.BigStringToken.Foot, 3))
-                    break
-                
-                self.escaping = False
-            
-            return self.BigStringToken(tokens)
         
-        def try_anyword(self):
-            head = self.head()
-            if head in QUOTE_CHARSET:
+        return self.BigStringToken(tokens)
+    
+    def try_anyword(self):
+        head = self.head()
+        if head in QUOTE_CHARSET:
+            return self.try_string()
+        
+        if head in ['r', 'u']:
+            self.eat()
+            if self.head() in QUOTE_CHARSET:
                 return self.try_string()
             
-            if head in ['r', 'u']:
-                self.eat()
-                if self.head() in QUOTE_CHARSET:
-                    return self.try_string()
-                
-            
-            while not self.head() in "'"+' "()[]{}\t\n:;@#\\\0':
+        
+        while not self.head() in "'"+' "()[]{}\t\n:;@#\\\0':
+            self.eat();
+        #;
+        
+        if self.selected in CONTROL_KEYWORDS:
+            return self.take(self.ControlKeywordToken);
+        elif self.selected in KEYWORDS:
+            return self.take(self.KeywordToken);
+        #;
+        return self.take(self.Token)
+        
+    def try_comment(self):
+        if self.head() == '#':
+            if self.head(1) == ';':
+                return self.take(self.BlockEndianToken, 2);
+            #;
+            while not self.head() in ['\n', '\0']:
                 self.eat();
             #;
-            
-            if self.selected in CONTROL_KEYWORDS:
-                return self.take(self.ControlKeywordToken);
-            elif self.selected in KEYWORDS:
-                return self.take(self.KeywordToken);
+        #;
+        return self.take(self.CommentToken);
+    #;
+    def try_line(self):
+        token = self.try_indent();
+        if token is not None:
+            yield token;
+        #;
+        while self.head() and self.head() != '\n':
+            token = self.try_anyword();
+            if token is not None:
+                yield token;
+                continue;
             #;
-            return self.take(self.Token)
-            
-            def try_comment(self):
-                if self.head() == '#':
-                    if self.head(1) == ';':
-                        return self.take(self.BlockEndianToken, 2);
-                    #;
-                    while not self.head() in ['\n', '\0']:
-                        self.eat();
-                    #;
-                #;
-                return self.take(self.CommentToken);
+            token = self.try_whitespace();
+            if token is not None:
+                yield token;
+                continue;
             #;
-            def try_line(self):
-                token = self.try_indent();
-                if token is not None:
-                    yield token;
+            token = self.try_comment();
+            if token is not None:
+                yield token;
+                continue;
+            #;
+            if self.head() in '()[]{}':
+                yield self.take(self.BracketToken, 1);
+            elif self.head() == '@':
+                yield self.take(self.AtMarkToken, 1);
+            elif self.head() == ':':
+                yield self.take(self.ColonToken, 1);
+            elif self.head() == ';':
+                yield self.take(self.SemicolonToken, 1);
+            elif self.head() == '\\':
+                yield self.take(self.BackslashToken, 1);
+            else:
+                if self.infloop:
+                    raise Exception('sink in infinite loop');
                 #;
-                while self.head() and self.head() != '\n':
-                    token = self.try_anyword();
-                    if token is not None:
-                        yield token;
-                        continue;
-                    #;
-                    token = self.try_whitespace();
-                    if token is not None:
-                        yield token;
-                        continue;
-                    #;
-                    token = self.try_comment();
-                    if token is not None:
-                        yield token;
-                        continue;
-                    #;
-                    if self.head() in '()[]{}':
-                        yield self.take(self.BracketToken, 1);
-                    elif self.head() == '@':
-                        yield self.take(self.AtMarkToken, 1);
-                    elif self.head() == ':':
-                        yield self.take(self.ColonToken, 1);
-                    elif self.head() == ';':
-                        yield self.take(self.SemicolonToken, 1);
-                    elif self.head() == '\\':
-                        yield self.take(self.BackslashToken, 1);
-                    else:
-                        if self.infloop:
-                            raise Exception('sink in infinite loop');
-                        #;
-                    self.infloop = True;
-                #;
-                if self.head() == '\n':
-                    self.eat();
-                    yield self.take(self.EOLToken);
-                    self.pos.newline();
-                elif not self.head():
-                    self.eat();
-                    yield self.take(self.EOFToken);
-                else:
-                    raise Exception('TODO: What EOL?');
-                #;
-            def tokenize(self):
-                token = None
-                while type(token) != self.EOFToken:
-                    for token in self.try_line():
-                        yield token
-                        
+            #;
+            self.infloop = True;
+        #;
+        if self.head() == '\n':
+            self.eat();
+            yield self.take(self.EOLToken);
+            self.pos.newline();
+        elif not self.head():
+            self.eat();
+            yield self.take(self.EOFToken);
+        else:
+            raise Exception('TODO: What EOL?');
+        #;
+    def tokenize(self):
+        token = None
+        while type(token) != self.EOFToken:
+            for token in self.try_line():
+                yield token
+            
 import sys;
 
 class Debugger(object):
@@ -390,7 +390,7 @@ class Debugger(object):
         self.text = text;
         self.tokenizer = Tokenizer(self.text);
         self.tokens = self.tokenizer.tokenize();
-    #;
+#;
     def tokenize(self):
         lindex = 0;
         lines = self.text.split('\n');
@@ -398,7 +398,7 @@ class Debugger(object):
             print lines[lindex], '(Original)';
         #;
         tokens = [];
-    
+
         try:
             for token in self.tokens:
                 tokens.append(token);
@@ -410,7 +410,7 @@ class Debugger(object):
         except Exception as e:
             print ' (Tokenized)';
         #;
-    
+
         for token in tokens:
             sys.stdout.write(' ' * (token.pos.col - 1));
             sys.stdout.write('^' * token.cur.length);
