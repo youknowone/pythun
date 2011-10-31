@@ -1,4 +1,5 @@
 
+import traceback
 import tokenizer
 from tokenizer import Tokenizer
         
@@ -10,6 +11,8 @@ class Translator(object):
         self.pushbacks = []
         self.inf_loop = False
         self.block_depth = 0
+        self.need_newline = False
+        self.block_type = []
 
     def indent_token(self, depth=None):
         if depth is None:
@@ -48,20 +51,22 @@ class Translator(object):
     def translate_file(self):
         try:
             while type(self.look_token()) != self.t.EOFToken:
-                for token in self.translate_line():
-                    yield token
+                line = self.translate_line()
+                if line:
+                    for token in line:
+                        yield token
         except Exception as e:
             print e
+            traceback.print_exc()
 
     def translate_line(self):
-        if type(self.look_token()) == self.t.IndentToken:
+        if type(self.look_token()) in [self.t.IndentToken, self.t.WhitespaceToken]:
             self.pop_token()
-        
     
         if type(self.look_token()) == self.t.BlockEndianToken:
             self.pop_token()
             self.block_depth -= 1
-            #yield self.t.EOLToken();
+            self.need_newline = self.block_type.pop()
             return
 
         tokens = []
@@ -76,17 +81,21 @@ class Translator(object):
             noeffect = False
             break
         
-        yield self.indent_token()
-        
         if noeffect:
-            eol = self.t.EOLToken()
-            eol.text = '\n'
-            tokens.insert(0, eol)
-            tokens.append(self.pop_token())
-            for token in tokens:
-                yield token
+            if self.need_newline:
+                eol = self.t.EOLToken()
+                eol.text = '\n'
+                tokens.insert(0, eol)
+                tokens.append(self.pop_token())
+                for token in tokens:
+                    yield token
+            else:
+                self.pop_token()
+                self.need_newline = True
             return
-        
+
+        yield self.indent_token()
+
         tokens.reverse()
         for token in tokens:
             self.push_token(token)
@@ -94,6 +103,8 @@ class Translator(object):
         eol = self.t.EOLToken()
         eol.text = '\n'
         yield eol
+
+        token = self.look_token()
         if token.text in tokenizer.CONTROL_KEYWORDS:
             depth = self.block_depth
             if token.text in ['else', 'elif', 'except', 'finally']:
@@ -117,6 +128,7 @@ class Translator(object):
             return
         for t in self.translate_to_endian():
             yield t;
+        self.need_newline = False
     
     def translate_import(self):
         if self.look_token().text == 'from':
@@ -125,21 +137,25 @@ class Translator(object):
         if self.look_token().text == 'import':
             for token in self.translate_to_endian():
                 yield token
+            self.need_newline = False
 
     def translate_to_endian(self, endian=None, accept_endian=False):
         if endian is None:
             endian = [self.t.SemicolonToken]
+        last_token = None
         while not type(self.look_token()) in endian + [self.t.EOFToken]:
             if type(self.look_token()) == self.t.EOLToken:
-                token = self.t.BackslashToken()
-                token.text = '\\'
-                yield token
+                if last_token and last_token.text != '\\':
+                    token = self.t.BackslashToken()
+                    token.text = '\\'
+                    yield token
                 yield self.pop_token()
                 if type(self.look_token()) == self.t.IndentToken:
                     self.pop_token()
                 yield self.indent_token(self.block_depth + 1)
                 continue
-            yield self.pop_token()
+            last_token = self.pop_token()
+            yield last_token
         endian_token = self.pop_token()
         if type(endian_token) == self.t.EOLToken:
             return
@@ -157,6 +173,7 @@ class Translator(object):
         if not self.look_token().text in tokenizer.DEFINITION_KEYWORDS:
             raise Exception('wrong call' + str(self.look_token()))
         self.block_depth += 1
+        self.block_type.append(True)
         for token in self.translate_to_endian([self.t.ColonToken], True):
             yield token
     
@@ -165,6 +182,7 @@ class Translator(object):
             raise Exception('wrong call' + str(self.look_token()))
         if not self.look_token().text in ['elif', 'else', 'except', 'finally']:
             self.block_depth += 1
+            self.block_type.append(False)
         for token in self.translate_to_endian([self.t.ColonToken], True):
             yield token
 

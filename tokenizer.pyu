@@ -115,198 +115,201 @@ class Tokenizer(object):
         class SpaceIndentToken(IndentToken): pass; #;
         
         class WhitespaceToken(Token): __name__ = 'whitespace'; #;
-        tokenizer.WhitespaceToken = WhitespaceToken
+        tokenizer.WhitespaceToken = WhitespaceToken;
         
         class KeywordToken(Token): __name__ = 'keyword'; #;
-        tokenizer.KeywordToken = KeywordToken
+        tokenizer.KeywordToken = KeywordToken;
         
         class ControlKeywordToken(Token):
-            __name__ = 'controlkeyword'
-        
-        tokenizer.ControlKeywordToken = ControlKeywordToken
+            __name__ = 'controlkeyword';
+        #;
+        tokenizer.ControlKeywordToken = ControlKeywordToken;
         
         class StringToken(Token):
-            __name__ = 'string'
-        
-        tokenizer.StringToken = StringToken
+            __name__ = 'string';
+        #;
+        tokenizer.StringToken = StringToken;
         
         class BigStringToken(Token):
-            __name__ = 'bigstring'
-            class Head(Token): __name__ = 'bigstringhead'                 
-            class Body(Token): __name__ = 'bigstringbody'                 
-            class Foot(Token): __name__ = 'bigstringfoot'                 
+            __name__ = 'bigstring';
+            class Head(Token): __name__ = 'bigstringhead'; #;
+            class Body(Token): __name__ = 'bigstringbody'; #;
+            class Foot(Token): __name__ = 'bigstringfoot'; #;
             
             def __init__(self, tokens):
-                self.tokens = tokens
-                self.pos = tokens[0].pos
-                self.cur = tokens[0].cur.copy()
-                self.cur.length = tokens[-1].cur.end - self.cur.offset
+                self.tokens = tokens;
+                self.pos = tokens[0].pos;
+                self.cur = tokens[0].cur.copy();
+                self.cur.length = tokens[-1].cur.end - self.cur.offset;
+            #;
             @property
             def text(self):
                 if hasattr(self, '_text'):
-                    return self._text
-                
-                self._text = ''
+                    return self._text;
+                #;
+                self._text = '';
                 for token in self.tokens:
-                    self._text += token.text
-                
-                return self._text
-        tokenizer.BigStringToken = BigStringToken
-            
-        class AtMarkToken(Token): __name__ = 'annotation'                 
-        tokenizer.AtMarkToken = AtMarkToken
+                    self._text += token.text;
+                #;
+                return self._text;
+            #;
+        #;
+        tokenizer.BigStringToken = BigStringToken;
         
-        class BracketToken(Token):  __name__ = 'bracket'                 
-        tokenizer.BracketToken = BracketToken
+        class AtMarkToken(Token): __name__ = 'annotation'; #; 
+        tokenizer.AtMarkToken = AtMarkToken;
         
-        class RoundBracketToken(Token): __name__ = 'roundbracket' 
-        tokenizer.RoundBracketToken = RoundBracketToken
+        class BracketToken(Token):  __name__ = 'bracket'; #; 
+        tokenizer.BracketToken = BracketToken;
         
-        class SquareBracketToken(BracketToken): __name__ = 'squarebracket'
+        class RoundBracketToken(Token): __name__ = 'roundbracket'; #;
+        tokenizer.RoundBracketToken = RoundBracketToken;
+        
+        class SquareBracketToken(BracketToken): __name__ = 'squarebracket'; #;
         tokenizer.SquareBracketToken = SquareBracketToken;
         
-        class CurlyBracketToken(Token): __name__ = 'curlybracket' 
-        tokenizer.CurlyBracketToken = CurlyBracketToken
+        class CurlyBracketToken(Token): __name__ = 'curlybracket'; #;
+        tokenizer.CurlyBracketToken = CurlyBracketToken;
         
-        class ColonToken(Token): __name__ = 'colontoken' 
-        tokenizer.ColonToken = ColonToken
+        class ColonToken(Token): __name__ = 'colontoken'; #;
+        tokenizer.ColonToken = ColonToken;
         
-        class SemicolonToken(Token): __name__ = 'semicolon'                 
-        tokenizer.SemicolonToken = SemicolonToken
+        class SemicolonToken(Token): __name__ = 'semicolon'; #; 
+        tokenizer.SemicolonToken = SemicolonToken;
         
-        class BackslashToken(Token): __name__ = 'backslash' 
-        tokenizer.BackslashToken = BackslashToken
+        class BackslashToken(Token): __name__ = 'backslash'; #;
+        tokenizer.BackslashToken = BackslashToken;
         
-        class CommentToken(Token): __name__ = 'comment' 
-        tokenizer.CommentToken = CommentToken
+        class CommentToken(Token): __name__ = 'comment'; #;
+        tokenizer.CommentToken = CommentToken;
         
-        class BlockEndianToken(Token): __name__ = 'blockendian' 
-        tokenizer.BlockEndianToken = BlockEndianToken
+        class BlockEndianToken(Token): __name__ = 'blockendian'; #;
+        tokenizer.BlockEndianToken = BlockEndianToken;
         
         class EOLToken(Token):
             __name__ = 'eol';
             __eostatement__ = True;
         #;
-        tokenizer.EOLToken = EOLToken
+        tokenizer.EOLToken = EOLToken;
         
         class EOFToken(Token):
-            __name__ = 'eof'
-            __eostatement__ = True
+            __name__ = 'eof';
+            __eostatement__ = True;
         #;
-        tokenizer.EOFToken = EOFToken
-        
+        tokenizer.EOFToken = EOFToken;
+    #;
     def reset(self):
-        self.pos = Position(1, 1)
-        self.cur = Cursor(0)
-    
+        self.pos = Position(1, 1);
+        self.cur = Cursor(0);
+    #;
     def eat(self, length=1):
-        self.cur.length += length
-    
+        self.cur.length += length;
+    #;
     def back(self, length=None):
-        if length is None:                     length = self.cur.length                 
-        self.pos.col -= length
-        self.cur.length -= length
-        
+        if length is None: length = self.cur.length; #; 
+        self.pos.col -= length;
+        self.cur.length -= length;
+    #;
     def take(self, tokentype, length=0):
-        self.eat(length)
-        if self.cur.length == 0:                     return                 
+        self.eat(length);
+        if self.cur.length == 0: return; #; 
         
-        token = tokentype()
-        self.pos.col += self.cur.length
-        self.cur.offset += self.cur.length
-        self.cur.length = 0
-        self.infloop = False
-        return token
-    
+        token = tokentype();
+        self.pos.col += self.cur.length;
+        self.cur.offset += self.cur.length;
+        self.cur.length = 0;
+        self.infloop = False;
+        return token;
+    #;
     def try_indent(self):
         while self.head() in [' ', '\t']:
-            self.eat()
-        
-        return self.take(self.IndentToken)
-    
+            self.eat();
+        #;
+        return self.take(self.IndentToken);
+    #;
     def try_whitespace(self):
         while self.head() in [' ', '\t']:
-            self.eat()
+            self.eat();
         #;
-        return self.take(self.WhitespaceToken)
-    
+        return self.take(self.WhitespaceToken);
+    #;
     def try_string(self):
-        head = self.head()
+        head = self.head();
         if head in ['ru']:
-            self.eat()
-        
-        quote = head
+            self.eat();
+        #;
+        quote = head;
         if not quote in QUOTE_CHARSET:
-            raise Exception('TODO: Not Quote Character')
+            raise Exception('TODO: Not Quote Character');
+        #;
         
-        
-        self.escaping = False
+        self.escaping = False;
         while True:
-            self.eat()
+            self.eat();
             if self.head() == '\\':
-                self.escaping = not self.escaping
-                continue
-            
+                self.escaping = not self.escaping;
+                continue;
+            #;
             if self.head() == quote and not self.escaping:
-                self.eat()
-                break
-            
-            self.escaping = False
+                self.eat();
+                break;
+            #;
+            self.escaping = False;
             if self.head() == '\n':
-                raise Exception('TODO: Syntax Error EOL')
-            
-        
+                raise Exception('TODO: Syntax Error EOL');
+            #;
+        #;
         if self.selected[-2] == self.selected[-1] == self.head():
-            self.eat(-2)
-            return self.try_bigstring()
-        
-        return self.take(self.StringToken)
-        
+            self.eat(-2);
+            return self.try_bigstring();
+        #;
+        return self.take(self.StringToken);
+    #;
     def try_bigstring(self):
-        quote = self.head()
+        quote = self.head();
         if not quote in QUOTE_CHARSET:
-            raise Exception('TODO: Not Quote Character')
-        
+            raise Exception('TODO: Not Quote Character');
+        #;
         if not self.head(0) == self.head(1) == self.head(2):
-            raise Exception('TODO: Syntax Error Not Bigstring')
+            raise Exception('TODO: Syntax Error Not Bigstring');
+        #;
+        tokens = [self.take(self.BigStringToken.Head, 3)];
         
-        tokens = [self.take(self.BigStringToken.Head, 3)]
-        
-        self.escaping = False
+        self.escaping = False;
         while True:
             if self.head() == '\n':
-                tokens.append(self.take(self.BigStringToken.Body, 1))
-                self.pos.newline()
-                continue
-            
-            self.eat()
+                tokens.append(self.take(self.BigStringToken.Body, 1));
+                self.pos.newline();
+                continue;
+            #;
+            self.eat();
             if self.head() == '\\':
-                self.escaping = True
-                continue
-            
+                self.escaping = True;
+                continue;
+            #;
             if self.head() == quote and not self.escaping:
                 if not self.head(0) == self.head(1) == self.head(2):
-                    continue
-                
-                tokens.append(self.take(self.BigStringToken.Body))
-                tokens.append(self.take(self.BigStringToken.Foot, 3))
-                break
-            
-            self.escaping = False
-        
-        return self.BigStringToken(tokens)
-    
+                    continue;
+                #;
+                tokens.append(self.take(self.BigStringToken.Body));
+                tokens.append(self.take(self.BigStringToken.Foot, 3));
+                break;
+            #;
+            self.escaping = False;
+        #;
+        return self.BigStringToken(tokens);
+    #;
     def try_anyword(self):
-        head = self.head()
+        head = self.head();
         if head in QUOTE_CHARSET:
-            return self.try_string()
-        
+            return self.try_string();
+        #;
         if head in ['r', 'u']:
-            self.eat()
+            self.eat();
             if self.head() in QUOTE_CHARSET:
-                return self.try_string()
-            
-        
+                return self.try_string();
+            #;
+        #;
         while not self.head() in "'"+' "()[]{}\t\n:;@#\\\0':
             self.eat();
         #;
@@ -316,8 +319,8 @@ class Tokenizer(object):
         elif self.selected in KEYWORDS:
             return self.take(self.KeywordToken);
         #;
-        return self.take(self.Token)
-        
+        return self.take(self.Token);
+    #;
     def try_comment(self):
         if self.head() == '#':
             if self.head(1) == ';':
@@ -377,51 +380,54 @@ class Tokenizer(object):
         else:
             raise Exception('TODO: What EOL?');
         #;
+    #;
     def tokenize(self):
-        token = None
+        token = None;
         while type(token) != self.EOFToken:
             for token in self.try_line():
-                yield token
+                yield token;
+            #;
+        #;
+    #;
+#;
             
 import sys;
-
 class Debugger(object):
     def __init__(self, text):
         self.text = text;
         self.tokenizer = Tokenizer(self.text);
         self.tokens = self.tokenizer.tokenize();
-#;
+    #;
     def tokenize(self):
         lindex = 0;
         lines = self.text.split('\n');
         while lines:
             print lines[lindex], '(Original)';
-        #;
-        tokens = [];
-
-        try:
-            for token in self.tokens:
-                tokens.append(token);
-                if type(token) == self.tokenizer.EOLToken:
-                    break;
+            
+            tokens = [];
+            try:
+                for token in self.tokens:
+                    tokens.append(token);
+                    if type(token) == self.tokenizer.EOLToken:
+                        break;
+                    #;
+                    sys.stdout.write(token.text);
                 #;
+            except Exception as e:
+                print ' (Tokenized)';
+                for token in tokens:
+                    sys.stdout.write(' ' * (token.pos.col - 1));
+                    sys.stdout.write('^' * token.cur.length);
+                    print ':', token;
+                #;
+                raise e;
             #;
-            sys.stdout.write(token.text);
-        except Exception as e:
             print ' (Tokenized)';
-        #;
-
-        for token in tokens:
-            sys.stdout.write(' ' * (token.pos.col - 1));
-            sys.stdout.write('^' * token.cur.length);
-            print ':', token;
-            raise e;
-        #;
-        print ' (Tokenized)';
-        for token in tokens:
-            sys.stdout.write(' ' * (token.pos.col - 1));
-            sys.stdout.write('^' * token.cur.length);
-            print ':', token;
+            for token in tokens:
+                sys.stdout.write(' ' * (token.pos.col - 1));
+                sys.stdout.write('^' * token.cur.length);
+                print ':', token;
+            #;
             print '-' * 79;
             lindex = tokens[-1].pos.line;
             if type(tokens[-1]) == self.tokenizer.EOFToken:
