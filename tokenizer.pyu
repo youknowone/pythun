@@ -299,7 +299,6 @@ class Tokenizer(object):
                     tokens.append(token);
                 #;
                 tokens.append(self.take(self.BigStringToken.Foot, 3));
-                print tokens
                 return self.BigStringToken(tokens);
             #;
             self.eat();

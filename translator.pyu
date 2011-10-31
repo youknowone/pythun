@@ -65,7 +65,6 @@ class Translator(object):
                 #;
             #;
         except Exception as e:
-            print e;
             traceback.print_exc();
         #;
     #;
@@ -85,27 +84,28 @@ class Translator(object):
         #;
         noeffect = True;
         for token in tokens:
-            if type(token) in [self.t.EOFToken, self.t.EOLToken,
-                               self.t.CommentToken]:
+            if type(token) in [self.t.EOFToken, self.t.EOLToken]:
+                continue;
+            #;
+            if type(token) == self.t.CommentToken:
                 continue;
             #;
             noeffect = False;
             break;
         #;
         if noeffect:
-            if self.need_newline:
-                eol = self.t.EOLToken();
-                eol.text = '\n';
-                tokens.insert(0, eol);
-                tokens.append(self.pop_token());
-                for token in tokens:
-                    yield token;
-                #;
-            else:
-                self.pop_token();
-                self.need_newline = True;
+            self.pop_token();
+            for token in tokens:
+                yield token;
             #;
             return;
+        #;
+
+        if self.need_newline:
+            eol = self.t.EOLToken();
+            eol.text = '\n';
+            yield eol
+            self.need_newline = False;
         #;
         yield self.indent_token();
 
