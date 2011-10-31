@@ -25,7 +25,7 @@ Command below test all code compiled by pythun code is identical to all code com
 	make test
 
 # Known problems
-Current implementation do not has parser but only rough translator.
+Current implementation does not has parser but only rough translator.
 If you wrote wrong pythun code, this implementation merely not available to catch it.
 
 Code indentation and line changes are not kept well. This is bug.
