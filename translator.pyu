@@ -3,6 +3,7 @@ import traceback;
 import tokenizer;
 from tokenizer import Tokenizer;
 
+
 class Translator(object):
     def __init__(self, text):
         self.text = text;

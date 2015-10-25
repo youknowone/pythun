@@ -10,7 +10,7 @@ class DataTuple(object):
     """General mutable named data tuple""";
     def __init__(self, **kargs):
         self.keys = kargs.keys();
-        for karg, value in kargs.iteritems():
+        for karg, value in kargs.items():
             setattr(self, karg, value);
         #;
     #;
@@ -53,7 +53,7 @@ class ImpureIndentTokenError(Exception): pass; #;
 
 class Tokenizer(object):
     """Break text to tokens.
-    This is not python token but meaningful enough for pythun compiler.   
+    This is not python token but meaningful enough for pythun compiler.
     """;
     def head(self, origin=0, size=1):
         try:
@@ -76,7 +76,7 @@ class Tokenizer(object):
     #;
     def build_token_types(tokenizer):
         """Build token typeset""";
-    
+
         class Token(object):
             __name__ = 'anon';
             __eostatement__ = False;
@@ -106,35 +106,35 @@ class Tokenizer(object):
             #;
         #;
         tokenizer.Token = Token;
-        
+
         class IndentToken(Token): __name__ = 'indent'; #;
         tokenizer.IndentToken = IndentToken;
-        
+
         class TabIndentToken(IndentToken): pass; #;
         class SpaceIndentToken(IndentToken): pass; #;
-        
+
         class WhitespaceToken(Token): __name__ = 'whitespace'; #;
         tokenizer.WhitespaceToken = WhitespaceToken;
-        
+
         class KeywordToken(Token): __name__ = 'keyword'; #;
         tokenizer.KeywordToken = KeywordToken;
-        
+
         class ControlKeywordToken(Token):
             __name__ = 'controlkeyword';
         #;
         tokenizer.ControlKeywordToken = ControlKeywordToken;
-        
+
         class StringToken(Token):
             __name__ = 'string';
         #;
         tokenizer.StringToken = StringToken;
-        
+
         class BigStringToken(Token):
             __name__ = 'bigstring';
             class Head(Token): __name__ = 'bigstringhead'; #;
             class Body(Token): __name__ = 'bigstringbody'; #;
             class Foot(Token): __name__ = 'bigstringfoot'; #;
-            
+
             def __init__(self, tokens):
                 self.tokens = tokens;
                 self.pos = tokens[0].pos;
@@ -154,43 +154,43 @@ class Tokenizer(object):
             #;
         #;
         tokenizer.BigStringToken = BigStringToken;
-        
-        class AtMarkToken(Token): __name__ = 'annotation'; #; 
+
+        class AtMarkToken(Token): __name__ = 'annotation'; #;
         tokenizer.AtMarkToken = AtMarkToken;
-        
-        class BracketToken(Token):  __name__ = 'bracket'; #; 
+
+        class BracketToken(Token):  __name__ = 'bracket'; #;
         tokenizer.BracketToken = BracketToken;
-        
+
         class RoundBracketToken(Token): __name__ = 'roundbracket'; #;
         tokenizer.RoundBracketToken = RoundBracketToken;
-        
+
         class SquareBracketToken(BracketToken): __name__ = 'squarebracket'; #;
         tokenizer.SquareBracketToken = SquareBracketToken;
-        
+
         class CurlyBracketToken(Token): __name__ = 'curlybracket'; #;
         tokenizer.CurlyBracketToken = CurlyBracketToken;
-        
+
         class ColonToken(Token): __name__ = 'colontoken'; #;
         tokenizer.ColonToken = ColonToken;
-        
-        class SemicolonToken(Token): __name__ = 'semicolon'; #; 
+
+        class SemicolonToken(Token): __name__ = 'semicolon'; #;
         tokenizer.SemicolonToken = SemicolonToken;
-        
+
         class BackslashToken(Token): __name__ = 'backslash'; #;
         tokenizer.BackslashToken = BackslashToken;
-        
+
         class CommentToken(Token): __name__ = 'comment'; #;
         tokenizer.CommentToken = CommentToken;
-        
+
         class BlockEndianToken(Token): __name__ = 'blockendian'; #;
         tokenizer.BlockEndianToken = BlockEndianToken;
-        
+
         class EOLToken(Token):
             __name__ = 'eol';
             __eostatement__ = True;
         #;
         tokenizer.EOLToken = EOLToken;
-        
+
         class EOFToken(Token):
             __name__ = 'eof';
             __eostatement__ = True;
@@ -205,14 +205,14 @@ class Tokenizer(object):
         self.cur.length += length;
     #;
     def back(self, length=None):
-        if length is None: length = self.cur.length; #; 
+        if length is None: length = self.cur.length; #;
         self.pos.col -= length;
         self.cur.length -= length;
     #;
     def take(self, tokentype, length=0):
         self.eat(length);
-        if self.cur.length == 0: return; #; 
-        
+        if self.cur.length == 0: return; #;
+
         token = tokentype();
         self.pos.col += self.cur.length;
         self.cur.offset += self.cur.length;
@@ -241,7 +241,7 @@ class Tokenizer(object):
         if not quote in QUOTE_CHARSET:
             raise Exception('TODO: Not Quote Character');
         #;
-        
+
         self.escaping = False;
         while True:
             self.eat();
@@ -273,7 +273,7 @@ class Tokenizer(object):
             raise Exception('TODO: Syntax Error Not Bigstring');
         #;
         tokens = [self.take(self.BigStringToken.Head, 3)];
-        
+
         self.escaping = False;
         while True:
             if not self.head():
@@ -320,7 +320,7 @@ class Tokenizer(object):
         while not self.head() in "'"+' "()[]{}\t\n:;@#\\\0':
             self.eat();
         #;
-        
+
         if self.selected in CONTROL_KEYWORDS:
             return self.take(self.ControlKeywordToken);
         elif self.selected in KEYWORDS:
@@ -397,7 +397,7 @@ class Tokenizer(object):
         #;
     #;
 #;
-            
+
 import sys;
 class Debugger(object):
     def __init__(self, text):
@@ -409,8 +409,8 @@ class Debugger(object):
         lindex = 0;
         lines = self.text.split('\n');
         while lines:
-            print lines[lindex], '(Original)';
-            
+            print(lines[lindex], '(Original)');
+
             tokens = [];
             try:
                 for token in self.tokens:
@@ -421,21 +421,21 @@ class Debugger(object):
                     sys.stdout.write(token.text);
                 #;
             except Exception as e:
-                print ' (Tokenized)';
+                print(' (Tokenized)');
                 for token in tokens:
                     sys.stdout.write(' ' * (token.pos.col - 1));
                     sys.stdout.write('^' * token.cur.length);
-                    print ':', token;
+                    print(':', token);
                 #;
                 raise e;
             #;
-            print ' (Tokenized)';
+            print(' (Tokenized)');
             for token in tokens:
                 sys.stdout.write(' ' * (token.pos.col - 1));
                 sys.stdout.write('^' * token.cur.length);
-                print ':', token;
+                print(':', token);
             #;
-            print '-' * 79;
+            print('-' * 79);
             lindex = tokens[-1].pos.line;
             if type(tokens[-1]) == self.tokenizer.EOFToken:
                 return;

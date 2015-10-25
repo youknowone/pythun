@@ -15,13 +15,13 @@ debug = False;
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], 'hVd', ["help", "version", "debug"]);
-except getopt.error, msg:
-    print msg;
+except getopt.error as msg:
+    print(msg);
     sys.exit(2);
 #;
 for o, a in opts:
     if o in ("-h", "--help", "-V", "--version"):
-        print __doc__;
+        print(__doc__);
         sys.exit(0);
     #;
     if o in ("-d", "--debug"):
@@ -44,6 +44,6 @@ for arg in args:
         tokenizer.tokenize();
     #;
     transer = translator.Translator(text);
-    print transer.translate();
+    print(transer.translate());
 #;
 
