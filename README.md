@@ -1,32 +1,33 @@
 
 # About Pythun
-Pythun(PYTHon UNindented) is indent-insensitive python dialect.
-You should add ';' to end of each statement and '#;' to end of each block.
+Pythun(PYTHon UNindented) is an indent-insensitive python dialect.
+You should add ';' to the end of each statement and '#;' to the end of each
+block.
 
 Pythun itself is written in python-compatible pythun code.
 
-Pythun gets only .pyu file, currently.
+Pythun takes only .pyu files, currently.
 
 Pythun wants to generate perfectly compatible syntax, semantic and code layout.
 
 # Test this version
 This is self-buildable pythun implementation.
 
-Command below makes all code to current python-compatible pythun code
+Next command will turn .py files into pythun files.
 
 	make clean
 
-Command below makes all code to compiled python code from pythun code
+Next command will build pythun files to generate python files.
 
 	make build
 
-Command below test all code compiled by pythun code is identical to all code compiled by compiled python code
+Next command will test pythun files and compiled python files are identical.
 
 	make test
 
 # Known problems
-Current implementation does not has parser but only rough translator.
-If you wrote wrong pythun code, this implementation merely not available to catch it.
+This implementation does not have proper parser but only rough translator.
+If you write wrong pythun code, translater will not catch it - mostly.
 
-Code indentation and line changes are not kept well. This is bug.
+Code indentation and line changes are not preserved very well. This is a bug.
 

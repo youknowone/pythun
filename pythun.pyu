@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-"""Pythun(<- PYTHon UNindented) is indent-insensitive python dialect.
+"""Pythun(<- PYTHon UNindented) is an indent-insensitive python dialect.
 
-This command output translated pythun code to python one.
+This command translates pythun code to python one.
 """;
 
 import sys;
@@ -46,4 +46,4 @@ for arg in args:
     transer = translator.Translator(text);
     print transer.translate();
 #;
-  
+
